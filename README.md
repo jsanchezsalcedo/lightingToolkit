@@ -24,4 +24,4 @@ The first public version of a compilation of tools I usually use in my daily wor
   <b>· New from objects</b>
   Creates a filter on each object selected into the light(s) selected.
   
-  <s>Note</s>: Normally, when you create a filter with Maya, only the <i>lightBlocker</i> is included into the defaultLightSet. If you create it into <b>Lighting Toolkit</b>, the filters are added into a new set named <i>defaultFilterSet</i> deleting itself from the <i>defaultLightSet</i>. This set, include all the filters, not just <i>lightBlocker</i>, to be more accessible. 
+  <u>Note</u>: Normally, when you create a filter with Maya, only the <i>lightBlocker</i> is included into the defaultLightSet. If you create it into <b>Lighting Toolkit</b>, the filters are added into a new set named <i>defaultFilterSet</i> deleting itself from the <i>defaultLightSet</i>. This set, include all the filters, not just <i>lightBlocker</i>, to be more accessible. 
