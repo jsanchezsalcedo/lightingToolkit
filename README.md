@@ -4,7 +4,7 @@ The first public version of a compilation of tools I usually use in daily work.
 
 <b>Updates</b>
 
- · Light and filter listers added
+ · Light and filter listers added.
 
 <b>Lights</b>
 
