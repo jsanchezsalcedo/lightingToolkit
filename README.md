@@ -1,6 +1,10 @@
- # Lighting Toolkit v1.1.1
+ # Lighting Toolkit v1.2.5
 
 The first public version of a compilation of tools I usually use in my daily work.
+
+<b>Updates</b>
+
+<b>· Light and Filter Listers added</b>
 
 <b>Lights</b>
 
