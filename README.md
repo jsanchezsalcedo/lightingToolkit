@@ -8,16 +8,26 @@ The first public version of a compilation of tools I usually use in daily work.
 
 <b>Lights</b>
 
+  <b>· Select Light Filters Button</b>
+  Select the filters (aiLightBlocker) connected to a light previously selected.
+  
+<b>Filters</b>
+
+  <b>· Select Filter Ligths Button</b>
+  Select the lights connected to a filter (aiLightBlocker) previously selected.
+  
+<b>Tools/Lights</b>
+
   <b>· New</b>
-  Creates a light previously selected on lights combo.
+  Creates a light previously selected on the lights combo.
   
   <b>· New from view</b>
   Creates a light from a camera, previously selected. Works fine with all kind of lights but normally, I use it with <i>spotLights</i> or <i>areaLights</i>.
   
   <b>· New from objects</b>
-  Creates a light on each object selected and creates a parent constraint to the light. In case you don't want it, you only have to delete it from the light.
+  Creates a light on each object previously selected and creates a parent constraint to the light. In case you don't want it, you only have to delete it from the light.
   
-<b>Filters</b>
+<b>Tools/Filters</b>
 
   <b>· New</b>
   Creates a filter previously selected on filters combo into the light(s) previously selected.
