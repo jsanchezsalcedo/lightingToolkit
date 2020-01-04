@@ -7,10 +7,12 @@ The first public version of a compilation of tools I usually use in daily work.
  · Light and filter listers added.
 
 <b>Lights</b>
+
   <b>· Select Light Filters Button</b>
   Select the filters (aiLightBlocker) connected to the light previously selected.
   
 <b>Filters</b>
+
   <b>· Select Filter Ligths Button</b>
   Select the lights connected to the filter (aiLightBlocker) previously selected.
   
