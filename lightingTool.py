@@ -2,12 +2,8 @@ from maya import OpenMayaUI as omui
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 from maya import cmds as cmds
 
-try:
-    from PySide2 import QtCore, QtGui, QtWidgets
-    from shiboken2 import wrapInstance
-except ImportError:
-    from PySide import QtCore, QtGui, QtWidgets
-    from shiboken import wrapInstance
+from PySide2 import QtCore, QtWidgets
+from shiboken2 import wrapInstance
 
 mainWindow = None
 __title__ = 'Lighting Toolkit'
@@ -15,510 +11,540 @@ __version__ = '1.2.5'
 
 print ' '
 print ' > {} {}.'.format(__title__,__version__)
-print ' > by Jorge Sanchez Salcedo (2019)'
+print ' > by Jorge Sanchez Salcedo (2020)'
 print ' > www.jorgesanchez-da.com'
 print ' > jorgesanchez.da@gmail.com'
 print ' '
+print ' > You just openned {} {} successfully.'.format(__title__,__version__)
+print ' '
 
 def getMayaWindow():
-    ptr = omui.MQtUtil.mainWindow()
-    mainWindow = wrapInstance(long(ptr),QtWidgets.QWidget)
-    return mainWindow
+	ptr = omui.MQtUtil.mainWindow()
+	mainWindow = wrapInstance(long(ptr),QtWidgets.QWidget)
+	return mainWindow
 
 class LgtToolkit():
-    def getLightType(self):
-        lightTypes = ['aiSkyDomeLight',
-                      'areaLight',
-                      'directionalLight',
-                      'pointLight',
-                      'spotLight',
-                      'aiMeshLight',
-                      'aiPhotometricLight',
-                      'aiLightPortal',
-                      'aiPhysicalSky']
+	def getLightType(self):
+		lightTypes = ['aiSkyDomeLight',
+					  'areaLight',
+					  'directionalLight',
+					  'pointLight',
+					  'spotLight',
+					  'aiMeshLight',
+					  'aiPhotometricLight',
+					  'aiLightPortal',
+					  'aiPhysicalSky']
 
-        return lightTypes
+		return lightTypes
 
-    def getLightName(self):
-        sceneLights = []
-        lightTypes = self.getLightType()
-        sceneLights = cmds.listRelatives(cmds.ls(typ=lightTypes), p=True)
-        return sceneLights
+	def getLightName(self):
+		sceneLights = []
+		lightTypes = self.getLightType()
+		sceneLights = cmds.listRelatives(cmds.ls(typ=lightTypes), p=True)
+		return sceneLights
 
-    def getFilterType(self):
-        filterTypes = ['aiGobo',
-                      'aiBarndoor',
-                      'aiLightBlocker',
-                      'aiLightDecay']
+	def getFilterType(self):
+		filterTypes = ['aiGobo',
+					  'aiBarndoor',
+					  'aiLightBlocker',
+					  'aiLightDecay']
 
-        return filterTypes
+		return filterTypes
 
-    def getFilterName(self):
-        sceneFilters = []
-        filterTypes = self.getFilterType()
-        sceneFilters = cmds.ls(typ=filterTypes)
-        return sceneFilters
+	def getFilterName(self):
+		sceneFilters = []
+		filterTypes = self.getFilterType()
+		sceneFilters = cmds.ls(typ=filterTypes)
+		return sceneFilters
 
 class LgtToolkitUI(MayaQWidgetDockableMixin, QtWidgets.QMainWindow):
-    def __init__(self, parent=None):
-        super(LgtToolkitUI, self).__init__(parent)
-        self.setWindowTitle('{} {}'.format(__title__, __version__))
-        self.setMinimumHeight(350)
-        self.setMinimumWidth(285)
-        self.toolkit = LgtToolkit()
-        self.createUI()
+	def __init__(self, parent=None):
+		super(LgtToolkitUI, self).__init__(parent)
+		self.setWindowTitle('{} {}'.format(__title__, __version__))
+		self.setMinimumHeight(350)
+		self.setMinimumWidth(285)
+		self.toolkit = LgtToolkit()
+		self.buildUI()
+
+	def buildUI(self):
+		tabWidget = QtWidgets.QTabWidget()
+
+		###############################################################
 
-    def createUI(self):
-        tabWidget = QtWidgets.QTabWidget()
+		lightsTab = QtWidgets.QWidget()
 
-        ###############################################################
+		lightsTabLayout = QtWidgets.QVBoxLayout(lightsTab)
+		lightsTabLayout.setContentsMargins(0,0,0,0)
+		lightsTabLayout.setAlignment(QtCore.Qt.AlignTop)
+
+		lightsTabSplitter = QtWidgets.QSplitter(orientation=QtCore.Qt.Vertical)
 
-        lightsTab = QtWidgets.QWidget()
+		lightsTopWidget = QtWidgets.QWidget()
+		lightsTopLayout = QtWidgets.QVBoxLayout(lightsTopWidget)
+		lightsTopLayout.setContentsMargins(0,0,0,0)
 
-        lightsTabLayout = QtWidgets.QVBoxLayout(lightsTab)
-        lightsTabLayout.setContentsMargins(0,0,0,0)
-        lightsTabLayout.setAlignment(QtCore.Qt.AlignTop)
+		lightListLabels = ['Name', 'I', 'E', 'S', 'B']
+		self.lightListWidget = QtWidgets.QTableWidget()
+		self.lightListWidget.horizontalHeader().setVisible(True)
+		self.lightListWidget.verticalHeader().setVisible(False)
+		self.lightListWidget.setColumnCount(len(lightListLabels))
+		self.lightListWidget.resizeColumnsToContents()
+		self.lightListWidget.setColumnWidth(0,135)
+		self.lightListWidget.setColumnWidth(1, 30)
+		self.lightListWidget.setColumnWidth(2, 30)
+		self.lightListWidget.setColumnWidth(3, 30)
+		self.lightListWidget.setColumnWidth(4, 30)
+		self.lightListWidget.setHorizontalHeaderLabels(lightListLabels)
+		self.lightListWidget.setAlternatingRowColors(True)
+		self.lightListWidget.setSortingEnabled(True)
+		self.lightListWidget.setShowGrid(False)
 
-        lightsTabSplitter = QtWidgets.QSplitter(orientation=QtCore.Qt.Vertical)
+		self.lightListWidget.itemClicked.connect(self.selectLights)
 
-        lightsTopWidget = QtWidgets.QWidget()
-        lightsTopLayout = QtWidgets.QVBoxLayout(lightsTopWidget)
-        lightsTopLayout.setContentsMargins(0,0,0,0)
+		lightsTopLayout.addWidget(self.lightListWidget)
 
-        lightListLabels = ['Name', 'I', 'E', 'S', 'B']
-        self.lightListWidget = QtWidgets.QTableWidget()
-        self.lightListWidget.horizontalHeader().setVisible(True)
-        self.lightListWidget.verticalHeader().setVisible(False)
-        self.lightListWidget.setColumnCount(len(lightListLabels))
-        self.lightListWidget.resizeColumnsToContents()
-        self.lightListWidget.setColumnWidth(0,135)
-        self.lightListWidget.setColumnWidth(1, 30)
-        self.lightListWidget.setColumnWidth(2, 30)
-        self.lightListWidget.setColumnWidth(3, 30)
-        self.lightListWidget.setColumnWidth(4, 30)
-        self.lightListWidget.setHorizontalHeaderLabels(lightListLabels)
-        self.lightListWidget.setAlternatingRowColors(True)
-        self.lightListWidget.setSortingEnabled(True)
-        self.lightListWidget.setShowGrid(False)
+		lightsFilterWidget = QtWidgets.QWidget()
+		lightsFilterLayout = QtWidgets.QHBoxLayout(lightsFilterWidget)
+		lightsFilterLayout.setContentsMargins(2,2,2,2)
+		lightsFilterLayout.setAlignment(QtCore.Qt.AlignTop)
+		lightsTopLayout.addWidget(lightsFilterWidget)
 
-        self.lightListWidget.itemClicked.connect(self.selectLights)
+		selectLightFiltersButton = QtWidgets.QPushButton('Select Light Filters')
+		lightsFilterLayout.addWidget(selectLightFiltersButton)
+		selectLightFiltersButton.clicked.connect(self.selectLightFilters)
 
-        lightsTopLayout.addWidget(self.lightListWidget)
+		lightsButtonWidget = QtWidgets.QWidget()
+		lightsButtonLayout = QtWidgets.QHBoxLayout(lightsButtonWidget)
+		lightsButtonLayout.setContentsMargins(2,2,2,2)
+		lightsButtonLayout.setAlignment(QtCore.Qt.AlignTop)
+		lightsTopLayout.addWidget(lightsButtonWidget)
 
-        lightsButtonWidget = QtWidgets.QWidget()
-        lightsButtonLayout = QtWidgets.QHBoxLayout(lightsButtonWidget)
-        lightsTopLayout.addWidget(lightsButtonWidget)
+		isolateButton = QtWidgets.QPushButton('Isolate')
+		isolateButton.setCheckable(True)
+		self.isolateStatus = False
+		lightsButtonLayout.addWidget(isolateButton)
+		isolateButton.clicked.connect(self.isolateLights)
 
-        isolateButton = QtWidgets.QPushButton('Isolate')
-        isolateButton.setCheckable(True)
-        self.isolateStatus = False
-        lightsButtonLayout.addWidget(isolateButton)
-        isolateButton.clicked.connect(self.isolateLights)
+		deleteLightButton = QtWidgets.QPushButton('Delete')
+		lightsButtonLayout.addWidget(deleteLightButton)
+		deleteLightButton.clicked.connect(self.deleteLights)
 
-        deleteLightButton = QtWidgets.QPushButton('Delete')
-        lightsButtonLayout.addWidget(deleteLightButton)
-        deleteLightButton.clicked.connect(self.deleteLights)
+		lightsTabSplitter.addWidget(lightsTopWidget)
 
-        lightsTabSplitter.addWidget(lightsTopWidget)
+		lightAttrWidget = QtWidgets.QWidget()
 
-        lightAttrWidget = QtWidgets.QWidget()
+		lightAttrLayout = QtWidgets.QVBoxLayout(lightAttrWidget)
 
-        lightAttrLayout = QtWidgets.QVBoxLayout(lightAttrWidget)
+		#lightsTabSplitter.addWidget(lightAttrWidget)
 
-        #lightsTabSplitter.addWidget(lightAttrWidget)
+		lightsTabLayout.addWidget(lightsTabSplitter)
 
-        lightsTabLayout.addWidget(lightsTabSplitter)
+		tabWidget.addTab(lightsTab, 'Lights')
 
-        tabWidget.addTab(lightsTab, 'Lights')
+		###############################################################
 
-        ###############################################################
+		filtersTab = QtWidgets.QWidget()
 
-        filtersTab = QtWidgets.QWidget()
+		filtersTabLayout = QtWidgets.QVBoxLayout(filtersTab)
+		filtersTabLayout.setContentsMargins(0, 0, 0, 0)
+		filtersTabLayout.setAlignment(QtCore.Qt.AlignTop)
 
-        filtersTabLayout = QtWidgets.QVBoxLayout(filtersTab)
-        filtersTabLayout.setContentsMargins(0, 0, 0, 0)
-        filtersTabLayout.setAlignment(QtCore.Qt.AlignTop)
+		filtersTabSplitter = QtWidgets.QSplitter(orientation=QtCore.Qt.Vertical)
 
-        filtersTabSplitter = QtWidgets.QSplitter(orientation=QtCore.Qt.Vertical)
+		filtersTopWidget = QtWidgets.QWidget()
+		filtersTopLayout = QtWidgets.QVBoxLayout(filtersTopWidget)
+		filtersTopLayout.setContentsMargins(0, 0, 0, 0)
 
-        filtersTopWidget = QtWidgets.QWidget()
-        filtersTopLayout = QtWidgets.QVBoxLayout(filtersTopWidget)
-        filtersTopLayout.setContentsMargins(0, 0, 0, 0)
+		filterListLabels = ['Name']
+		self.filterListWidget = QtWidgets.QTableWidget()
+		self.filterListWidget.horizontalHeader().setVisible(True)
+		self.filterListWidget.verticalHeader().setVisible(False)
+		self.filterListWidget.setColumnCount(len(filterListLabels))
+		self.filterListWidget.resizeColumnsToContents()
+		self.filterListWidget.setColumnWidth(0, 265)
+		self.filterListWidget.setHorizontalHeaderLabels(filterListLabels)
+		self.filterListWidget.setAlternatingRowColors(True)
+		self.filterListWidget.setSortingEnabled(True)
+		self.filterListWidget.setShowGrid(False)
 
-        filterListLabels = ['Name']
-        self.filterListWidget = QtWidgets.QTableWidget()
-        self.filterListWidget.horizontalHeader().setVisible(True)
-        self.filterListWidget.verticalHeader().setVisible(False)
-        self.filterListWidget.setColumnCount(len(filterListLabels))
-        self.filterListWidget.resizeColumnsToContents()
-        self.filterListWidget.setColumnWidth(0, 265)
-        self.filterListWidget.setHorizontalHeaderLabels(filterListLabels)
-        self.filterListWidget.setAlternatingRowColors(True)
-        self.filterListWidget.setSortingEnabled(True)
-        self.filterListWidget.setShowGrid(False)
+		self.filterListWidget.itemClicked.connect(self.selectFilters)
 
-        self.filterListWidget.itemClicked.connect(self.selectFilters)
+		filtersTopLayout.addWidget(self.filterListWidget)
 
-        filtersTopLayout.addWidget(self.filterListWidget)
+		filtersButtonWidget = QtWidgets.QWidget()
+		filtersButtonLayout = QtWidgets.QHBoxLayout(filtersButtonWidget)
+		filtersButtonLayout.setAlignment(QtCore.Qt.AlignTop)
+		filtersButtonLayout.setContentsMargins(2,2,2,2)
+		filtersTopLayout.addWidget(filtersButtonWidget)
 
-        filtersButtonWidget = QtWidgets.QWidget()
-        filtersButtonLayout = QtWidgets.QHBoxLayout(filtersButtonWidget)
-        filtersTopLayout.addWidget(filtersButtonWidget)
+		selectFilterLightsButton = QtWidgets.QPushButton('Select Filter Lights')
+		filtersButtonLayout.addWidget(selectFilterLightsButton)
+		selectFilterLightsButton.clicked.connect(self.selectFilterLights)
 
-        selectFilterLightsButton = QtWidgets.QPushButton('Select Filter Lights')
-        filtersButtonLayout.addWidget(selectFilterLightsButton)
-        selectFilterLightsButton.clicked.connect(self.selectFilterLights)
+		filtersTabSplitter.addWidget(filtersTopWidget)
 
-        filtersTabSplitter.addWidget(filtersTopWidget)
+		filterAttrWidget = QtWidgets.QWidget()
 
-        filterAttrWidget = QtWidgets.QWidget()
+		filterAttrLayout = QtWidgets.QVBoxLayout(filterAttrWidget)
 
-        filterAttrLayout = QtWidgets.QVBoxLayout(filterAttrWidget)
+		#filtersTabSplitter.addWidget(filterAttrWidget)
 
-        #filtersTabSplitter.addWidget(filterAttrWidget)
+		filtersTabLayout.addWidget(filtersTabSplitter)
 
-        filtersTabLayout.addWidget(filtersTabSplitter)
+		tabWidget.addTab(filtersTab, 'Filters')
 
-        tabWidget.addTab(filtersTab, 'Filters')
+		###############################################################
 
-        ###############################################################
+		toolkitTab = QtWidgets.QWidget()
 
-        toolkitTab = QtWidgets.QWidget()
+		toolkitTabLayout = QtWidgets.QVBoxLayout(toolkitTab)
+		toolkitTabLayout.setAlignment(QtCore.Qt.AlignTop)
 
-        toolkitTabLayout = QtWidgets.QVBoxLayout(toolkitTab)
-        toolkitTabLayout.setAlignment(QtCore.Qt.AlignTop)
+		lgtToolkitBox = QtWidgets.QGroupBox('Lights')
+		lgtToolkitLayout = QtWidgets.QVBoxLayout(lgtToolkitBox)
 
-        lgtToolkitBox = QtWidgets.QGroupBox('Lights')
-        lgtToolkitLayout = QtWidgets.QVBoxLayout(lgtToolkitBox)
+		self.selectLightType = QtWidgets.QComboBox()
+		self.selectLightType.addItems(self.toolkit.getLightType())
+		lgtToolkitLayout.addWidget(self.selectLightType)
 
-        self.selectLightType = QtWidgets.QComboBox()
-        self.selectLightType.addItems(self.toolkit.getLightType())
-        lgtToolkitLayout.addWidget(self.selectLightType)
+		createLightButton = QtWidgets.QPushButton('Create')
+		createLightButton.clicked.connect(self.createLight)
+		lgtToolkitLayout.addWidget(createLightButton)
 
-        createLightButton = QtWidgets.QPushButton('Create')
-        createLightButton.clicked.connect(self.createLight)
-        lgtToolkitLayout.addWidget(createLightButton)
+		createLightViewButton = QtWidgets.QPushButton('Create from view')
+		createLightViewButton.clicked.connect(self.createLightView)
+		lgtToolkitLayout.addWidget(createLightViewButton)
 
-        createLightViewButton = QtWidgets.QPushButton('Create from view')
-        createLightViewButton.clicked.connect(self.createLightView)
-        lgtToolkitLayout.addWidget(createLightViewButton)
+		createLightObjectButton = QtWidgets.QPushButton('Create from object')
+		createLightObjectButton.clicked.connect(self.createLightObject)
+		lgtToolkitLayout.addWidget(createLightObjectButton)
 
-        createLightObjectButton = QtWidgets.QPushButton('Create from object')
-        createLightObjectButton.clicked.connect(self.createLightObject)
-        lgtToolkitLayout.addWidget(createLightObjectButton)
+		toolkitTabLayout.addWidget(lgtToolkitBox)
 
-        toolkitTabLayout.addWidget(lgtToolkitBox)
+		fltToolkitBox = QtWidgets.QGroupBox('Filters')
+		fltToolkitLayout = QtWidgets.QVBoxLayout(fltToolkitBox)
 
-        fltToolkitBox = QtWidgets.QGroupBox('Filters')
-        fltToolkitLayout = QtWidgets.QVBoxLayout(fltToolkitBox)
+		self.selectFilterType = QtWidgets.QComboBox()
+		self.selectFilterType.addItems(self.toolkit.getFilterType())
+		fltToolkitLayout.addWidget(self.selectFilterType)
 
-        self.selectFilterType = QtWidgets.QComboBox()
-        self.selectFilterType.addItems(self.toolkit.getFilterType())
-        fltToolkitLayout.addWidget(self.selectFilterType)
+		createFilterButton = QtWidgets.QPushButton('Create')
+		createFilterButton.clicked.connect(self.createFilter)
+		fltToolkitLayout.addWidget(createFilterButton)
 
-        createFilterButton = QtWidgets.QPushButton('Create')
-        createFilterButton.clicked.connect(self.createFilter)
-        fltToolkitLayout.addWidget(createFilterButton)
+		createFilterObjectButton = QtWidgets.QPushButton('Create from object')
+		createFilterObjectButton.clicked.connect(self.createFilterObject)
+		fltToolkitLayout.addWidget(createFilterObjectButton)
 
-        createFilterObjectButton = QtWidgets.QPushButton('Create from object')
-        createFilterObjectButton.clicked.connect(self.createFilterObject)
-        fltToolkitLayout.addWidget(createFilterObjectButton)
+		toolkitTabLayout.addWidget(fltToolkitBox)
 
-        toolkitTabLayout.addWidget(fltToolkitBox)
+		tabWidget.addTab(toolkitTab, 'Tools')
 
-        tabWidget.addTab(toolkitTab, 'Tools')
+		###############################################################
 
-        ###############################################################
+		self.setCentralWidget(tabWidget)
 
-        self.setCentralWidget(tabWidget)
+		self.populateLights()
 
-        self.populateLights()
+	def createLight(self):
+		type = self.selectLightType.currentText()
+		name = type + 'Shape'
+		newLight = cmds.shadingNode(type, n=name, al=True)
 
-    def createLight(self):
-        type = self.selectLightType.currentText()
-        name = type + 'Shape'
-        cmds.shadingNode(type, n=name, al=True)
-        print 'You have created', name, 'successfully.'
-        self.populateLights()
+		print 'You have created', name, 'successfully.'
 
-    def createLightView(self):
-        selectedCam = cmds.ls(sl=True)
+		self.populateLights()
 
-        transform = {
-            'translateX': '',
-            'translateY': '',
-            'translateZ': '',
-            'rotateX': '',
-            'rotateY': '',
-            'rotateZ': ''
-        }
+	def createLightView(self):
+		selectedCam = cmds.ls(sl=True)
 
-        try:
-            for i in selectedCam:
-                panel = cmds.getPanel(wf=True)
-                camera = cmds.modelPanel(panel, q=True, cam=True)
-                cameraShape = cmds.listRelatives(camera, ad=True)
+		transform = {
+			'translateX': '',
+			'translateY': '',
+			'translateZ': '',
+			'rotateX': '',
+			'rotateY': '',
+			'rotateZ': ''
+		}
 
-                if cmds.ls(cameraShape, st=True)[1] == 'camera':
-                    for k, v in transform.iteritems():
-                        attr = i + '.' + k
-                        val = cmds.getAttr(attr)
-                        transform[k] = val
+		try:
+			for i in selectedCam:
+				panel = cmds.getPanel(wf=True)
+				camera = cmds.modelPanel(panel, q=True, cam=True)
+				cameraShape = cmds.listRelatives(camera, ad=True)
 
-                    type = self.selectLightType.currentText()
-                    name = type + 'Shape'
-                    newLight = cmds.shadingNode(type, n=name, al=True)
-                    print 'You have created', name, 'from', camera, 'successfully.'
+				if cmds.ls(cameraShape, st=True)[1] == 'camera':
+					for k, v in transform.iteritems():
+						attr = i + '.' + k
+						val = cmds.getAttr(attr)
+						transform[k] = val
 
-                    for k, v in transform.iteritems():
-                        attr = newLight + '.' + k
-                        cmds.setAttr(attr, transform[k])
+					type = self.selectLightType.currentText()
+					name = type + 'Shape'
+					newLight = cmds.shadingNode(type, n=name, al=True)
+					print 'You have created', name, 'from', camera, 'successfully.'
 
-                    cmds.lookThru(newLight, panel)
+					for k, v in transform.iteritems():
+						attr = newLight + '.' + k
+						cmds.setAttr(attr, transform[k])
 
-                    self.populateLights()
+					cmds.lookThru(newLight, panel)
 
-                else:
-                    print 'First, you have to select a camera.'
+					self.populateLights()
 
-        except RuntimeError:
-            print 'First, you have to select a camera.'
+				else:
+					print 'First, you have to select a camera.'
 
-    def createLightObject(self):
-        selectedMesh = cmds.ls(sl=True)
+		except RuntimeError:
+			print 'First, you have to select a camera.'
 
-        transform = {
-            'translateX': '',
-            'translateY': '',
-            'translateZ': '',
-            'rotateX': '',
-            'rotateY': '',
-            'rotateZ': ''
-        }
+	def createLightObject(self):
+		selectedMesh = cmds.ls(sl=True)
 
-        for i in sorted(selectedMesh):
-            type = self.selectLightType.currentText()
-            name = type + 'Shape'
-            newLight = cmds.shadingNode(type, n=name, al=True)
-            print 'You have created', newLight, 'on', i, 'successfully.'
+		transform = {
+			'translateX': '',
+			'translateY': '',
+			'translateZ': '',
+			'rotateX': '',
+			'rotateY': '',
+			'rotateZ': ''
+		}
 
-            for k, v in transform.iteritems():
-                attr = i + '.' + k
-                val = cmds.getAttr(attr)
-                transform[k] = val
-                attr = newLight + '.' + k
-                cmds.setAttr(attr, transform[k])
+		for i in sorted(selectedMesh):
+			type = self.selectLightType.currentText()
+			name = type + 'Shape'
+			newLight = cmds.shadingNode(type, n=name, al=True)
+			print 'You have created', newLight, 'on', i, 'successfully.'
 
-            cmds.parentConstraint(i, newLight, mo=True, w=1)
+			for k, v in transform.iteritems():
+				attr = i + '.' + k
+				val = cmds.getAttr(attr)
+				transform[k] = val
+				attr = newLight + '.' + k
+				cmds.setAttr(attr, transform[k])
 
-        self.populateLights()
+			cmds.parentConstraint(i, newLight, mo=False, w=1)
 
-    def createFilter(self):
-        lightType = self.toolkit.getLightType()
-        lightSelection = cmds.ls(sl=True, dag=True, typ=lightType)
-        sceneSets = cmds.ls(set=True)
+		self.populateLights()
 
-        if 'defaultFilterSet' in sceneSets:
-            pass
-        else:
-            cmds.sets(n='defaultFilterSet', em=True)
+	def createFilter(self):
+		lightType = self.toolkit.getLightType()
+		lightSelection = cmds.ls(sl=True, dag=True, typ=lightType)
+		sceneSets = cmds.ls(set=True)
 
-        type = self.selectFilterType.currentText()
-        name = type + 'Shape'
-        newFilter = cmds.shadingNode(type, n=name, al=True)
+		if 'defaultFilterSet' in sceneSets:
+			pass
+		else:
+			cmds.sets(n='defaultFilterSet', em=True)
 
-        cmds.sets(newFilter, rm='defaultLightSet')
-        cmds.sets(newFilter, add='defaultFilterSet')
+		type = self.selectFilterType.currentText()
+		name = type + 'Shape'
+		newFilter = cmds.shadingNode(type, n=name, al=True)
 
-        print 'You have created', newFilter, 'succesfully.'
+		cmds.sets(newFilter, rm='defaultLightSet')
+		cmds.sets(newFilter, add='defaultFilterSet')
 
-        for light in sorted(lightSelection):
-            for i in range(10):
-                checkConnections = cmds.connectionInfo(light + '.aiFilters[' + str(i) + ']', ied=True)
+		print 'You have created', newFilter, 'succesfully.'
 
-                if checkConnections == True:
-                    continue
-                else:
-                    filterConnection = newFilter + '.message'
-                    freeSlot = light + '.aiFilters[' + str(i) + ']'
+		for light in sorted(lightSelection):
+			for i in range(10):
+				checkConnections = cmds.connectionInfo(light + '.aiFilters[' + str(i) + ']', ied=True)
 
-                    cmds.connectAttr(filterConnection, freeSlot)
-                    print '   > You just connect:'
-                    print '     ', newFilter, 'to', freeSlot
-                    break
+				if checkConnections == True:
+					continue
+				else:
+					filterConnection = newFilter + '.message'
+					freeSlot = light + '.aiFilters[' + str(i) + ']'
 
-        self.populateFilters()
+					cmds.connectAttr(filterConnection, freeSlot)
+					print '   > You just connect:'
+					print '     ', newFilter, 'to', freeSlot
+					break
 
-    def createFilterObject(self):
-        lightType = self.toolkit.getLightType()
-        lightSelection = cmds.ls(sl=True, dag=True, typ=lightType)
-        meshSelection = cmds.listRelatives(cmds.ls(sl=True, dag=True, type='mesh'), p=True)
-        sceneSets = cmds.ls(set=True)
+		self.populateFilters()
 
-        if 'defaultFilterSet' in sceneSets:
-            pass
-        else:
-            cmds.sets(n='defaultFilterSet', em=True)
+	def createFilterObject(self):
+		lightType = self.toolkit.getLightType()
+		lightSelection = cmds.ls(sl=True, dag=True, typ=lightType)
+		meshSelection = cmds.listRelatives(cmds.ls(sl=True, dag=True, type='mesh'), p=True)
+		sceneSets = cmds.ls(set=True)
 
-        for i in sorted(meshSelection):
-            transform = cmds.xform(i, q=True, bb=True, a=True, ws=True)
+		if 'defaultFilterSet' in sceneSets:
+			pass
+		else:
+			cmds.sets(n='defaultFilterSet', em=True)
 
-            sizeX = transform[3] - transform[0]
-            sizeY = transform[4] - transform[1]
-            sizeZ = transform[5] - transform[2]
+		for i in sorted(meshSelection):
+			transform = cmds.xform(i, q=True, bb=True, a=True, ws=True)
 
-            posX = sizeX / 2 + transform[0]
-            posY = sizeY / 2 + transform[1]
-            posZ = sizeZ / 2 + transform[2]
+			sizeX = transform[3] - transform[0]
+			sizeY = transform[4] - transform[1]
+			sizeZ = transform[5] - transform[2]
 
-            type = self.selectFilterType.currentText()
-            name = type + 'Shape'
-            newFilter = cmds.shadingNode(type, n=name, al=True)
-
-            cmds.sets(newFilter, rm='defaultLightSet')
-            cmds.sets(newFilter, add='defaultFilterSet')
-
-            cmds.xform(newFilter, t=(posX, posY, posZ), s=(sizeX, sizeY, sizeZ))
-
-            print 'You have created', newFilter, 'succesfully.'
-
-            for light in lightSelection:
-                for i in range(10):
-                    checkConnection = cmds.connectionInfo(light + '.aiFilters[' + str(i) + ']', ied=True)
-
-                    if checkConnection == True:
-                        continue
-                    else:
-                        filterConnection = newFilter + '.message'
-                        freeSlot = light + '.aiFilters[' + str(i) + ']'
-
-                        cmds.connectAttr(filterConnection, freeSlot)
-                        print '   > You just connect:'
-                        print '     ', newFilter, 'to', freeSlot
-                        break
-
-        self.populateFilters()
-
-    def populateLights(self):
-        self.lightListWidget.clearContents()
-        self.lightListWidget.setRowCount(0)
-        sceneLights = self.toolkit.getLightName()
-
-        try:
-            for light in sorted(sceneLights):
-                itemName = QtWidgets.QTableWidgetItem(light)
-
-                intensity = str(cmds.getAttr(light + '.intensity'))
-                itemInt = QtWidgets.QTableWidgetItem(intensity)
-                itemInt.setFlags(QtCore.Qt.ItemIsEnabled)
-                itemInt.setTextAlignment(QtCore.Qt.AlignCenter)
-
-                exposure = str(cmds.getAttr(light + '.aiExposure'))
-                itemExp = QtWidgets.QTableWidgetItem(exposure)
-                itemExp.setFlags(QtCore.Qt.ItemIsEnabled)
-                itemExp.setTextAlignment(QtCore.Qt.AlignCenter)
-
-                samples = str(cmds.getAttr(light + '.aiSamples'))
-                itemSamples = QtWidgets.QTableWidgetItem(samples)
-                itemSamples.setFlags(QtCore.Qt.ItemIsEnabled)
-                itemSamples.setTextAlignment(QtCore.Qt.AlignCenter)
-
-                bounces = str(cmds.getAttr(light + '.aiMaxBounces'))
-                itemBounces = QtWidgets.QTableWidgetItem(bounces)
-                itemBounces.setFlags(QtCore.Qt.ItemIsEnabled)
-                itemBounces.setTextAlignment(QtCore.Qt.AlignCenter)
-
-                row = self.lightListWidget.rowCount()
-                rowNum = 0 + row
-
-                self.lightListWidget.insertRow(rowNum)
-                self.lightListWidget.setItem(rowNum, 0, itemName)
-                self.lightListWidget.setItem(rowNum, 1, itemInt)
-                self.lightListWidget.setItem(rowNum, 2, itemExp)
-                self.lightListWidget.setItem(rowNum, 3, itemSamples)
-                self.lightListWidget.setItem(rowNum, 4, itemBounces)
-
-        except TypeError:
-            pass
-
-        self.populateFilters()
-
-    def selectLights(self):
-        try:
-            items = self.lightListWidget.selectedItems()
-            lights = [light.text() for light in items]
-            cmds.select(lights)
-            return lights
-        except TypeError:
-            pass
-
-    def isolateLights(self):
-        sceneLights = self.toolkit.getLightName()
-
-        if self.isolateStatus == False:
-            self.isolateStatus = True
-            for light in sceneLights:
-                visAttr = light + '.visibility'
-                visibility = cmds.getAttr(visAttr)
-                selectedLights = cmds.ls(sl = True)
-                try:
-                    if light not in selectedLights:
-                        cmds.setAttr(visAttr, 0)
-                    else:
-                        cmds.setAttr(visAttr, 1)
-                except TypeError:
-                    if visibility == True:
-                        cmds.setAttr(visAttr, 0)
-                    else:
-                        cmds.setAttr(visAttr, 1)
-        else:
-            self.isolateStatus = False
-            for light in sceneLights:
-                visAttr = light + '.visibility'
-                cmds.setAttr(visAttr, 1)
-
-    def deleteLights(self):
-        selectedLights = self.selectLights()
-        cmds.delete(selectedLights)
-        self.populateLights()
-
-    def populateFilters(self):
-        self.filterListWidget.clearContents()
-        self.filterListWidget.setRowCount(0)
-        sceneFilters = self.toolkit.getFilterName()
-
-        try:
-            for filter in sorted(sceneFilters):
-                itemName = QtWidgets.QTableWidgetItem(filter)
-
-                row = self.filterListWidget.rowCount()
-                rowNum = 0 + row
-
-                self.filterListWidget.insertRow(rowNum)
-                self.filterListWidget.setItem(rowNum, 0, itemName)
-
-        except TypeError:
-            pass
-
-    def selectFilters(self):
-        try:
-            items = self.filterListWidget.selectedItems()
-            filters = [filter.text() for filter in items]
-            cmds.select(filters)
-            return filters
-        except TypeError:
-            pass
-
-    def selectFilterLights(self):
-        selectedFilter = self.selectFilters()[-1]
-        selectedFilter = cmds.listRelatives(selectedFilter, p=True)
-        for filter in selectedFilter:
-            lights = cmds.listConnections(filter)
-            lights.remove('defaultFilterSet')
-            cmds.select(lights, add=True)
+			posX = sizeX / 2 + transform[0]
+			posY = sizeY / 2 + transform[1]
+			posZ = sizeZ / 2 + transform[2]
+
+			type = self.selectFilterType.currentText()
+			name = type + 'Shape'
+			newFilter = cmds.shadingNode(type, n=name, al=True)
+
+			cmds.sets(newFilter, rm='defaultLightSet')
+			cmds.sets(newFilter, add='defaultFilterSet')
+
+			cmds.xform(newFilter, t=(posX, posY, posZ), s=(sizeX, sizeY, sizeZ))
+
+			cmds.parentConstraint(i, newFilter, mo=False, w=1)
+
+			print 'You have created', newFilter, 'succesfully.'
+
+			for light in lightSelection:
+				for i in range(10):
+					checkConnection = cmds.connectionInfo(light + '.aiFilters[' + str(i) + ']', ied=True)
+
+					if checkConnection == True:
+						continue
+					else:
+						filterConnection = newFilter + '.message'
+						freeSlot = light + '.aiFilters[' + str(i) + ']'
+
+						cmds.connectAttr(filterConnection, freeSlot)
+						print '   > You just connect:'
+						print '     ', newFilter, 'to', freeSlot
+						break
+
+		self.populateFilters()
+
+	def populateLights(self):
+		self.lightListWidget.clearContents()
+		self.lightListWidget.setRowCount(0)
+		sceneLights = self.toolkit.getLightName()
+
+		try:
+			for light in sorted(sceneLights):
+				itemName = QtWidgets.QTableWidgetItem(light)
+
+				intensity = str(cmds.getAttr(light + '.intensity'))
+				itemInt = QtWidgets.QTableWidgetItem(intensity)
+				itemInt.setFlags(QtCore.Qt.ItemIsEnabled)
+				itemInt.setTextAlignment(QtCore.Qt.AlignCenter)
+
+				exposure = str(cmds.getAttr(light + '.aiExposure'))
+				itemExp = QtWidgets.QTableWidgetItem(exposure)
+				itemExp.setFlags(QtCore.Qt.ItemIsEnabled)
+				itemExp.setTextAlignment(QtCore.Qt.AlignCenter)
+
+				samples = str(cmds.getAttr(light + '.aiSamples'))
+				itemSamples = QtWidgets.QTableWidgetItem(samples)
+				itemSamples.setFlags(QtCore.Qt.ItemIsEnabled)
+				itemSamples.setTextAlignment(QtCore.Qt.AlignCenter)
+
+				bounces = str(cmds.getAttr(light + '.aiMaxBounces'))
+				itemBounces = QtWidgets.QTableWidgetItem(bounces)
+				itemBounces.setFlags(QtCore.Qt.ItemIsEnabled)
+				itemBounces.setTextAlignment(QtCore.Qt.AlignCenter)
+
+				row = self.lightListWidget.rowCount()
+				rowNum = 0 + row
+
+				self.lightListWidget.insertRow(rowNum)
+				self.lightListWidget.setItem(rowNum, 0, itemName)
+				self.lightListWidget.setItem(rowNum, 1, itemInt)
+				self.lightListWidget.setItem(rowNum, 2, itemExp)
+				self.lightListWidget.setItem(rowNum, 3, itemSamples)
+				self.lightListWidget.setItem(rowNum, 4, itemBounces)
+
+		except TypeError:
+			pass
+
+		self.populateFilters()
+
+	def selectLights(self):
+		try:
+			items = self.lightListWidget.selectedItems()
+			lights = [light.text() for light in items]
+			cmds.select(lights)
+			return lights
+		except TypeError:
+			pass
+
+	def selectLightFilters(self):
+		selectedLight = self.selectLights()[-1]
+		print selectedLight
+		selectedLight = cmds.listRelatives(selectedLight, s=True)
+		print selectedLight
+		filters = cmds.listConnections(selectedLight)
+		for i in filters:
+			print i
+			cmds.select(filters, add=True)
+
+	def isolateLights(self):
+		sceneLights = self.toolkit.getLightName()
+
+		if self.isolateStatus == False:
+			self.isolateStatus = True
+			for light in sceneLights:
+				visAttr = light + '.visibility'
+				visibility = cmds.getAttr(visAttr)
+				selectedLights = cmds.ls(sl = True)
+				try:
+					if light not in selectedLights:
+						cmds.setAttr(visAttr, 0)
+					else:
+						cmds.setAttr(visAttr, 1)
+				except TypeError:
+					if visibility == True:
+						cmds.setAttr(visAttr, 0)
+					else:
+						cmds.setAttr(visAttr, 1)
+		else:
+			self.isolateStatus = False
+			for light in sceneLights:
+				visAttr = light + '.visibility'
+				cmds.setAttr(visAttr, 1)
+
+	def deleteLights(self):
+		selectedLights = self.selectLights()
+		cmds.delete(selectedLights)
+		self.populateLights()
+
+	def populateFilters(self):
+		self.filterListWidget.clearContents()
+		self.filterListWidget.setRowCount(0)
+		sceneFilters = self.toolkit.getFilterName()
+
+		try:
+			for filter in sorted(sceneFilters):
+				itemName = QtWidgets.QTableWidgetItem(filter)
+
+				row = self.filterListWidget.rowCount()
+				rowNum = 0 + row
+
+				self.filterListWidget.insertRow(rowNum)
+				self.filterListWidget.setItem(rowNum, 0, itemName)
+
+		except TypeError:
+			pass
+
+	def selectFilters(self):
+		try:
+			items = self.filterListWidget.selectedItems()
+			filters = [filter.text() for filter in items]
+			cmds.select(filters)
+			return filters
+		except TypeError:
+			pass
+
+	def selectFilterLights(self):
+		selectedFilter = self.selectFilters()[-1]
+		selectedFilter = cmds.listRelatives(selectedFilter, p=True)
+		for filter in selectedFilter:
+			lights = cmds.listConnections(filter)
+			lights.remove('defaultFilterSet')
+			cmds.select(lights, add=True)
 
 def run():
-    global mainWindow
-    if not mainWindow or not cmds.window(mainWindow, q=True, e=True):
-        mainWindow = LgtToolkitUI(parent=getMayaWindow())
-    mainWindow.show(dockable=True)
+	global mainWindow
+	if not mainWindow or not cmds.window(mainWindow, q=True, e=True):
+		mainWindow = LgtToolkitUI(parent=getMayaWindow())
+	mainWindow.show(dockable=True)
