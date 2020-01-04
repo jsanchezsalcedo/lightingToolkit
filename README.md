@@ -9,12 +9,12 @@ The first public version of a compilation of tools I usually use in daily work.
 <b>Lights</b>
 
   <b>· Select Light Filters Button</b>
-  Select the filters (aiLightBlocker) connected to the light previously selected.
+  Select the filters (aiLightBlocker) connected to a light previously selected.
   
 <b>Filters</b>
 
   <b>· Select Filter Ligths Button</b>
-  Select the lights connected to the filter (aiLightBlocker) previously selected.
+  Select the lights connected to a filter (aiLightBlocker) previously selected.
   
 <b>Tools/Lights</b>
 
